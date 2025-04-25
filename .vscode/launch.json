@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "zhedang",
-            "program": "${workspaceFolder}/build/hello_world",
+            "program": "${workspaceFolder}/build/string_validator",
             "args": [],
             "preLaunchTask": "build",
         }
