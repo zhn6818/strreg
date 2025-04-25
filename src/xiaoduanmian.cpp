@@ -184,7 +184,7 @@ int main() {
   std::cout << "\n提取符合条件的子字符串：" << std::endl;
 
   // 从较长的字符串中提取符合条件的子串
-  std::string longString = "xxx2250ABCDE32256024FGabcdefgh";
+  std::string longString = "225602445DD";
 
   // 使用年份22提取
   std::vector<std::string> extracted1 = extractValidStrings(longString, "22");
