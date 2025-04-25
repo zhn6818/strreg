@@ -7,8 +7,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "zhedang",
+            "name": "daduanmian",
             "program": "${workspaceFolder}/build/string_validator",
+            "args": [],
+            "preLaunchTask": "build",
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "xiaoduanmian",
+            "program": "${workspaceFolder}/build/xiaoduanmian",
             "args": [],
             "preLaunchTask": "build",
         }

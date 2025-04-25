@@ -10,5 +10,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 添加可执行文件
 add_executable(string_validator src/daduanmian.cpp)
 
-# 安装目标
-install(TARGETS string_validator DESTINATION bin) 
+# 添加小段面Hello World可执行文件
+add_executable(xiaoduanmian src/xiaoduanmian.cpp)
