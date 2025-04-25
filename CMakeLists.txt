@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 添加可执行文件
-add_executable(string_validator src/main.cpp)
+add_executable(string_validator src/daduanmian.cpp)
 
 # 安装目标
 install(TARGETS string_validator DESTINATION bin) 
