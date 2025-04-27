@@ -43,11 +43,48 @@ bool validateString(const std::string &str, const std::string &year = "25") {
 }
 
 /**
- * @brief 从输入字符串中提取符合规则的11位子字符串
+ * @brief 使用正则表达式验证8位字符串
+ * 规则：
+ * - 总长度必须是8位
+ * - 前两位是年份（可通过参数指定，默认为"25"）
+ * - 第3位只能是4、5、6、7、9
+ * - 第4位只能是0、1、2
+ * - 第5-8位可以是任意字符
+ *
+ * @param str 需要验证的字符串
+ * @param year 指定的年份，默认为"25"
+ * @return 如果字符串符合规则返回true，否则返回false
+ */
+bool validateString8(const std::string &str, const std::string &year = "25") {
+  if (year.length() != 2) {
+    std::cerr << "错误：年份必须是两位数字" << std::endl;
+    return false;
+  }
+
+  // 如果字符串长度不是8位，直接返回false
+  if (str.length() != 8) {
+    return false;
+  }
+
+  // 构建正则表达式
+  // ^ 表示开始，$ 表示结束
+  // 使用传入的year参数替代前两位
+  // [45679] 表示第3位只能是4、5、6、7或9
+  // [012] 表示第4位只能是0、1或2
+  // .{4} 表示第5-8位可以是任意字符
+  std::string pattern_str = "^" + year + "[45679][012].{4}$";
+  std::regex pattern(pattern_str);
+
+  return std::regex_match(str, pattern);
+}
+
+/**
+ * @brief 从输入字符串中提取符合规则的11位或8位子字符串
+ * 优先提取符合11位规则的字符串，如果没有符合11位规则的，则尝试提取符合8位规则的
  *
  * @param input 输入字符串
  * @param year 指定的年份，默认为"25"
- * @return 符合规则的11位子字符串，如果没有符合的子字符串则返回"null"
+ * @return 符合规则的子字符串，如果没有符合的子字符串则返回"null"
  */
 std::string extractValidString(const std::string &input,
                                const std::string &year = "25") {
@@ -56,21 +93,44 @@ std::string extractValidString(const std::string &input,
     return "null";
   }
 
-  // 如果字符串长度小于11位，则直接返回null
+  // 首先尝试提取符合11位规则的字符串
+
+  // 如果字符串长度小于11位，尝试8位规则
   if (input.length() < 11) {
+    // 如果长度等于8位，则直接验证
+    if (input.length() == 8) {
+      return validateString8(input, year) ? input : "null";
+    }
+    // 如果长度大于8位但小于11位，尝试提取8位子串
+    else if (input.length() > 8) {
+      // 提取所有可能的8位子串并验证
+      for (size_t i = 0; i <= input.length() - 8; ++i) {
+        std::string substr = input.substr(i, 8);
+        if (substr.substr(0, 2) == year && validateString8(substr, year)) {
+          return substr;
+        }
+      }
+    }
+    // 如果什么都没找到，返回"null"
     return "null";
   }
 
   // 如果字符串长度等于11位，则直接验证整个字符串
   if (input.length() == 11) {
-    return validateString(input, year) ? input : "null";
+    if (validateString(input, year)) {
+      return input;
+    }
+    // 如果11位字符串不符合规则，尝试提取8位子串
+    for (size_t i = 0; i <= input.length() - 8; ++i) {
+      std::string substr = input.substr(i, 8);
+      if (substr.substr(0, 2) == year && validateString8(substr, year)) {
+        return substr;
+      }
+    }
+    return "null";
   }
 
-  // 如果字符串长度大于11位，则尝试查找符合条件的子串
-  // 构建验证用的正则表达式模式
-  std::string pattern_str = "^" + year + "[45679][012].{4}[12345][012].$";
-  std::regex pattern(pattern_str);
-
+  // 如果字符串长度大于11位，则先尝试查找符合11位条件的子串
   // 遍历所有可能的11位子串并验证
   for (size_t i = 0; i <= input.length() - 11; ++i) {
     std::string substr = input.substr(i, 11);
@@ -83,15 +143,28 @@ std::string extractValidString(const std::string &input,
     }
   }
 
+  // 如果没有找到符合11位规则的子串，尝试查找符合8位规则的子串
+  for (size_t i = 0; i <= input.length() - 8; ++i) {
+    std::string substr = input.substr(i, 8);
+    // 检查子串的前两位是否匹配指定的年份
+    if (substr.substr(0, 2) == year) {
+      // 验证8位子串
+      if (validateString8(substr, year)) {
+        return substr;
+      }
+    }
+  }
+
   return "null";
 }
 
 /**
- * @brief 从多个字符串片段中找出满足正则表达式规则的11位字符串
+ * @brief 从多个字符串片段中找出满足正则表达式规则的11位或8位字符串
+ * 优先查找符合11位规则的字符串，如果没有则尝试查找符合8位规则的字符串
  *
  * @param fragments 字符串片段数组
  * @param year 指定的年份，默认为"25"
- * @return 符合规则的11位字符串，如果没有符合的字符串则返回"null"
+ * @return 符合规则的字符串，如果没有符合的字符串则返回"null"
  */
 std::string findValidFromFragments(const std::vector<std::string> &fragments,
                                    const std::string &year = "25") {
@@ -187,10 +260,11 @@ void generatePermutations(const std::vector<std::string> &fragments,
 /**
  * @brief 简化版的从字符串片段中查找有效字符串函数
  * 此版本不尝试所有排列组合，只考虑片段的线性组合
+ * 优先查找符合11位规则的字符串，如果没有则尝试查找符合8位规则的字符串
  *
  * @param fragments 字符串片段数组
  * @param year 指定的年份，默认为"25"
- * @return 符合规则的11位字符串，如果没有符合的字符串则返回"null"
+ * @return 符合规则的字符串，如果没有符合的字符串则返回"null"
  */
 std::string
 findValidFromFragmentsSimple(const std::vector<std::string> &fragments,
@@ -233,6 +307,12 @@ int main() {
 
   // 测试用户提供的示例字符串片段
   std::vector<std::string> fragments = {"7", "259112", "03", "401"};
+
+  // 新增测试用例：8位规则测试
+  std::string valid8 = "25501234";   // 有效的8位字符串
+  std::string invalid8 = "25301234"; // 第3位是3，不符合8位规则
+  std::string mixed = "25702212";    // 测试8位与11位混合场景
+  std::vector<std::string> fragments2 = {"257022", "12"}; // 新增片段测试
 
   std::cout << "验证结果（默认年份\"25\"）：" << std::endl;
   std::cout << valid
@@ -285,6 +365,34 @@ int main() {
 
   std::cout << "简单组合提取结果(年份\"72\")：" << simpleResult72 << std::endl;
   std::cout << "简单组合提取结果(年份\"25\")：" << simpleResult25 << std::endl;
+
+  // 测试8位规则函数
+  std::cout << "\n8位验证结果：" << std::endl;
+  std::cout << valid8 << " 是否符合8位规则: "
+            << (validateString8(valid8) ? "有效" : "无效") << std::endl;
+  std::cout << invalid8 << " 是否符合8位规则: "
+            << (validateString8(invalid8) ? "有效" : "无效") << std::endl;
+
+  // 测试混合场景
+  std::cout << "\n混合测试场景：" << std::endl;
+  std::cout << "字符串：\"" << mixed << "\"" << std::endl;
+  std::cout << "提取结果(年份\"25\")：" << extractValidString(mixed, "25")
+            << std::endl;
+
+  // 测试新增片段组合
+  std::cout << "\n新增片段测试结果：" << std::endl;
+  std::cout << "片段: ";
+  for (const auto &frag : fragments2) {
+    std::cout << "\"" << frag << "\" ";
+  }
+  std::cout << std::endl;
+
+  std::string fragmentResult = findValidFromFragmentsSimple(fragments2, "25");
+  std::cout << "简单组合提取结果(年份\"25\")：" << fragmentResult << std::endl;
+
+  std::string fragmentResultFull = findValidFromFragments(fragments2, "25");
+  std::cout << "完整组合提取结果(年份\"25\")：" << fragmentResultFull
+            << std::endl;
 
   return 0;
 }
